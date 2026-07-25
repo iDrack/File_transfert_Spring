@@ -39,10 +39,8 @@ public class Resources {
     @Enumerated(EnumType.STRING)
     private Visibility visibility;
 
-    @ElementCollection
-    @CollectionTable(name = "resource_shares", joinColumns = @JoinColumn(name = "resource_id"))
-    @Column(name = "shared_with_user_id")
-    private Set<String> sharedWithUsers = new HashSet<>();
+    @OneToMany(mappedBy = "resource")
+    private Set<ResourceSharedWithPermission> sharedWithUsers = new HashSet<>();
 
     @PrePersist
     protected void onCreate() {

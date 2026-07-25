@@ -60,6 +60,9 @@ public class User implements UserDetails {
     @JsonIgnore
     private Set<Role> roles = new HashSet<>();
 
+    @OneToMany(mappedBy = "user")
+    private Set<ResourceSharedWithPermission> resourcesSharedTo = new HashSet<>();
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
