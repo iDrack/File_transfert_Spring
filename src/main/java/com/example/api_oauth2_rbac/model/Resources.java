@@ -10,13 +10,12 @@ import java.util.Set;
 @Entity
 @Table(name = "resources")
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class Resources {
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+public abstract class Resources {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "resources_seq")
+    @SequenceGenerator(name = "resource_seq", sequenceName = "resource_seq", allocationSize = 1)
     @EqualsAndHashCode.Include
     private Long id;
 
@@ -41,6 +40,23 @@ public class Resources {
 
     @OneToMany(mappedBy = "resource")
     private Set<ResourceSharedWithPermission> sharedWithUsers = new HashSet<>();
+
+    protected Resources(Long id, String name, String type, Long ownerIs, User owner,
+                        LocalDateTime createdAt, Visibility visibility,
+                        Set<ResourceSharedWithPermission> sharedWithUsers) {
+        this.id = id;
+        this.name = name;
+        this.type = type;
+        this.ownerIs = ownerIs;
+        this.owner = owner;
+        this.createdAt = createdAt;
+        this.visibility = visibility;
+        this.sharedWithUsers = sharedWithUsers;
+    }
+
+    protected Resources() {
+
+    }
 
     @PrePersist
     protected void onCreate() {
