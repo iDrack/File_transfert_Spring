@@ -1,16 +1,21 @@
 package com.example.api_oauth2_rbac.controller;
 
+import com.example.api_oauth2_rbac.dto.user.UserLogin;
 import com.example.api_oauth2_rbac.dto.user.UserRead;
+import com.example.api_oauth2_rbac.dto.user.UserUpdate;
 import com.example.api_oauth2_rbac.model.Permission;
 import com.example.api_oauth2_rbac.model.User;
 import com.example.api_oauth2_rbac.security.annotation.RequirePermission;
 import com.example.api_oauth2_rbac.service.interfaces.IUserService;
 import com.example.api_oauth2_rbac.utils.DtoTools;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.List;
 import java.util.Map;
@@ -24,6 +29,90 @@ public class UserController {
     @Autowired
     private DtoTools dtoTools;
 
+    /**
+     * Get the curent user profile.
+     *
+     * @param currentUser User logged in.
+     * @return User profile.
+     */
+    @GetMapping(value = "/profile", produces = "application/json")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<UserRead> getCurrentUser(@AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.ok(dtoTools.convertToDto(currentUser, UserRead.class));
+    }
+
+    /**
+     * Fetch every user's information.
+     *
+     * @return List of every user with their public information.
+     */
+    @GetMapping(value = "/", produces = "application/json")
+    @PreAuthorize("isAuthenticated()")
+    @RequirePermission(Permission.USER_READ)
+    public ResponseEntity<List<UserRead>> getAllUsers() {
+        return ResponseEntity.ok(userService.getAllUsers()
+                .stream()
+                .map(user ->
+                        dtoTools.convertToDto(user, UserRead.class))
+                .toList());
+    }
+
+    /**
+     * Update the current user with new infos, require the "USER_UPDATE_SELF" permission (intended to be used by a user).
+     *
+     * @param user       User currently logged in and loaded in the SpringSecurity context.
+     * @param userUpdate New user infos.
+     * @return Use with updated infos.
+     */
+    @PutMapping(value = "/", produces = "application/json")
+    @PreAuthorize("isAuthenticated()")
+    @RequirePermission(Permission.USER_UPDATE_SELF)
+    public ResponseEntity<Map<String, String>> updateUserProfile(@AuthenticationPrincipal User user, @RequestBody UserUpdate userUpdate) {
+        try {
+            if (userService.testCredentials(user, userUpdate.getPassword())) {
+                User updatedUser = userService.update(user, userUpdate);
+                return ResponseEntity.ok(Map.of("data", updatedUser.getUsername() + " has been updated successfully."));
+            } else {
+                throw new HttpClientErrorException(HttpStatusCode.valueOf(403), "Password is incorrect.");
+            }
+        } catch (HttpClientErrorException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Disable the current user account.
+     * @param user User loaded in the Spring Security context.
+     * @param userLogin Needed to validate the user's password.
+     * @return Message on successful deactivation.
+     */
+    @DeleteMapping(value = "/")
+    @PreAuthorize("isAuthenticated()")
+    @RequirePermission(Permission.USER_DELETE_SELF)
+    public ResponseEntity<Map<String, String>> disableUser(@AuthenticationPrincipal User user, @RequestBody UserLogin userLogin) {
+        try {
+            if (userService.testCredentials(user, userLogin.getPassword())) {
+                User userDisabled = userService.disableAccount(user.getUsername());
+                //TODO: Log out user here
+                return ResponseEntity.ok(Map.of(
+                        "data", "User " + userDisabled.getUsername() + "'s account has been disabled."
+                ));
+            } else {
+                throw new HttpClientErrorException(HttpStatusCode.valueOf(403), "Password is incorrect.");
+            }
+        } catch (HttpClientErrorException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(Map.of(
+                    "error", e.getMessage()
+            ));
+        }
+    }
+
+    /**
+     * Delete a user permanently with the submitted username, required the "USER_DELETE" permission (intended to be used by admin).
+     *
+     * @param username The user to delete.
+     * @return Message with the use who has  been deleted.
+     */
     @DeleteMapping(value = "/{username}")
     @PreAuthorize("isAuthenticated()")
     @RequirePermission(Permission.USER_DELETE)
@@ -34,25 +123,8 @@ public class UserController {
             ));
         } else {
             return ResponseEntity.status(404).body(Map.of(
-                    "data", "User not found."
+                    "error", "User not found."
             ));
         }
-    }
-
-    @GetMapping(value = "/profile", produces = "application/json")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<UserRead> getCurrentUser(@AuthenticationPrincipal User currentUser) {
-        return ResponseEntity.ok(dtoTools.convertToDto(currentUser, UserRead.class));
-    }
-
-    @GetMapping(value = "/", produces = "application/json")
-    @PreAuthorize("isAuthenticated()")
-    @RequirePermission(Permission.USER_READ)
-    public ResponseEntity<List<UserRead>> getAllUSers() {
-        return ResponseEntity.ok(userService.getAllUsers()
-                .stream()
-                .map(user ->
-                        dtoTools.convertToDto(user, UserRead.class))
-                .toList());
     }
 }

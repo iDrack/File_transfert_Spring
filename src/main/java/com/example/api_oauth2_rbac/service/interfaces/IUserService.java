@@ -5,16 +5,20 @@ import com.example.api_oauth2_rbac.dto.user.UserLogin;
 import com.example.api_oauth2_rbac.dto.user.UserUpdate;
 import com.example.api_oauth2_rbac.model.Role;
 import com.example.api_oauth2_rbac.model.User;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.List;
 import java.util.Set;
 
+//TODO: Add service to log out the current user.
 public interface IUserService {
     public User create(UserCreate userCreateDto) throws IllegalArgumentException;
 
     public List<User> getAllUsers();
 
-    public User login(UserLogin userLoginDto)throws IllegalArgumentException;
+    public User login(UserLogin userLoginDto)throws HttpClientErrorException;
+
+    public boolean testCredentials(User user, String password) throws HttpClientErrorException;
 
     public User getByUsername(String username);
 
@@ -26,7 +30,7 @@ public interface IUserService {
 
     public boolean deleteByUsername(String username);
 
-    User update(UserUpdate userUpdateDto) throws IllegalArgumentException;
+    User update(User user, UserUpdate userUpdateDto) throws HttpClientErrorException;
 
-    User disableAccount(String username);
+    User disableAccount(String username) throws HttpClientErrorException;
 }
