@@ -75,6 +75,15 @@ public class JwtService {
                 .getSubject();
     }
 
+    public String extractUsernameFromRefresh(String token) {
+        return Jwts.parser()
+                .verifyWith(getSigningKey(jwtRefreshSecret))
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getSubject();
+    }
+
     public Claims extractClaims(String token) {
         return Jwts.parser()
                 .verifyWith(getSigningKey(jwtSecret))
