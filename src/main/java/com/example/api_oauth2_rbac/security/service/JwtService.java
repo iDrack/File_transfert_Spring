@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class JwtService {
@@ -145,6 +146,40 @@ public class JwtService {
         } catch (JwtException e) {
             return true; // If the token is invalid, consider it expired
         }
+    }
+
+    public boolean isRefreshTokenExpired(String refreshToken) {
+        try {
+            Date expiration = Jwts.parser()
+                    .verifyWith(getSigningKey(jwtRefreshSecret))
+                    .build()
+                    .parseSignedClaims(refreshToken)
+                    .getPayload()
+                    .getExpiration();
+            return expiration.before(new Date());
+        } catch (JwtException e) {
+            return true; // If the refreshToken is invalid, consider it expired
+        }
+    }
+
+    public Date extractRefreshExpiration(String refreshToken) {
+        return Jwts.parser()
+                .verifyWith(getSigningKey(jwtRefreshSecret))
+                .build()
+                .parseSignedClaims(refreshToken)
+                .getPayload()
+                .getExpiration();
+    }
+
+    public long getRefreshTokenRemainingMs(String refreshToken) {
+        Date expiration = extractRefreshExpiration(refreshToken);
+        long remaining = expiration.getTime() - System.currentTimeMillis();
+        return Math.max(0, remaining);
+    }
+
+    public long getRefreshTokenRemainingDays(String refreshToken) {
+        long remainingMs = getRefreshTokenRemainingMs(refreshToken);
+        return TimeUnit.MILLISECONDS.toDays(remainingMs); // jours entiers restants
     }
 
     public List<String> extractAuthorities(String token) {

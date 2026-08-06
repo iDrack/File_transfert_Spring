@@ -55,17 +55,38 @@ public class AuthController {
     }
 
     @PostMapping(value = "/refresh", produces = "application/json")
-    public ResponseEntity<Map<String, String>> refresh(@CookieValue(value = "refresh_token", required = false) String refreshToken) {
+    public ResponseEntity<Map<String, String>> refresh(@CookieValue(value = "refresh_token", required = false) String refreshToken, HttpServletResponse response) {
         if (refreshToken == null) return ResponseEntity.status(401).body(Map.of("error", "Missing refresh token"));
 
         String username = jwtService.extractUsernameFromRefresh(refreshToken);
         User user = userService.getByUsername(username);
 
-        if (user == null || !jwtService.isValidRefreshToken(refreshToken, user)) {
-            return ResponseEntity.status(401).body(Map.of("error", "Invalid refresh token"));
+        if (user == null || !jwtService.isValidRefreshToken(refreshToken, user) || jwtService.isRefreshTokenExpired(refreshToken)) {
+            ResponseCookie clear = ResponseCookie.from("refresh_token")
+                    .httpOnly(true)
+                    .secure(mode.equals("production"))
+                    .sameSite("Lax")
+                    .path("/api/auth")
+                    .maxAge(0)
+                    .build();
+            response.setHeader(HttpHeaders.SET_COOKIE, clear.toString());
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid or expired refresh token"));
         }
 
         String newAccessToken = jwtService.generateAccessToken(user);
+        //Check if refresh expire in less than a day and refresh it
+        if (jwtService.getRefreshTokenRemainingDays(refreshToken) <= 1) {
+            String newRefreshToken = jwtService.generateRefreshToken(user);
+            ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", newRefreshToken)
+                    .httpOnly(true)
+                    .secure(mode.equals("production"))
+                    .sameSite("Lax")
+                    .path("/api/auth")
+                    .maxAge(Duration.ofDays(15))
+                    .build();
+
+            response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+        }
         return ResponseEntity.ok(Map.of("access_token", newAccessToken));
     }
 

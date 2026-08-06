@@ -17,6 +17,12 @@ import java.util.Set;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 public class FileResource extends Resources{
 
+    //TODO: Add service to transfert a file and create a resource with visibility
+    //TODO: Add service to share a file with a list of users with permissions
+    //TODO: Add a service to share a file one user and with permission
+    //TODO: Add a service to update a resource data (visibility, shared with users, permission to user and default permission)
+    //TODO: Add Annotation to check if a user is in the shared user list of a resource
+
     @Column(name = "original_name", nullable = false, length = 50)
     private String originalName;
 
