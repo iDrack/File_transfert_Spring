@@ -91,7 +91,7 @@ public class AuthController {
     }
 
     @PostMapping(value = "/logout")
-    public ResponseEntity<Void> logout(HttpServletResponse response) {
+    public ResponseEntity<Map<String,String>> logout(HttpServletResponse response) {
         ResponseCookie clear = ResponseCookie.from("refresh_token")
                 .httpOnly(true)
                 .secure(mode.equals("production"))
@@ -100,7 +100,7 @@ public class AuthController {
                 .maxAge(0)
                 .build();
         response.setHeader(HttpHeaders.SET_COOKIE, clear.toString());
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(Map.of("data", "Logout successful."));
     }
 
     @PostMapping(value = "/register", produces = "application/json")

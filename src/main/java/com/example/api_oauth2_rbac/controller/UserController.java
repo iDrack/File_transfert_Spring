@@ -8,8 +8,12 @@ import com.example.api_oauth2_rbac.model.User;
 import com.example.api_oauth2_rbac.security.annotation.RequirePermission;
 import com.example.api_oauth2_rbac.service.interfaces.IUserService;
 import com.example.api_oauth2_rbac.utils.DtoTools;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -28,6 +32,8 @@ public class UserController {
     private IUserService userService;
     @Autowired
     private DtoTools dtoTools;
+    @Value("${MODE:dev}")
+    private String mode;
 
     /**
      * Get the curent user profile.
@@ -82,20 +88,30 @@ public class UserController {
 
     /**
      * Disable the current user account.
-     * @param user User loaded in the Spring Security context.
+     *
+     * @param user      User loaded in the Spring Security context.
      * @param userLogin Needed to validate the user's password.
      * @return Message on successful deactivation.
      */
     @DeleteMapping(value = "/")
     @PreAuthorize("isAuthenticated()")
     @RequirePermission(Permission.USER_DELETE_SELF)
-    public ResponseEntity<Map<String, String>> disableUser(@AuthenticationPrincipal User user, @RequestBody UserLogin userLogin) {
+    public ResponseEntity<Map<String, String>> disableUser(@AuthenticationPrincipal User user, @RequestBody UserLogin userLogin, HttpServletResponse response) {
         try {
             if (userService.testCredentials(user, userLogin.getPassword())) {
-                User userDisabled = userService.disableAccount(user.getUsername());
-                //TODO: Log out user here
+                userService.disableAccount(user.getUsername());
+                //Log out user
+                ResponseCookie clear = ResponseCookie.from("refresh_token")
+                        .httpOnly(true)
+                        .secure(mode.equals("production"))
+                        .sameSite("Lax")
+                        .path("/api/auth")
+                        .maxAge(0)
+                        .build();
+                response.setHeader(HttpHeaders.SET_COOKIE, clear.toString());
+
                 return ResponseEntity.ok(Map.of(
-                        "data", "User " + userDisabled.getUsername() + "'s account has been disabled."
+                        "data", "Your account has been disabled."
                 ));
             } else {
                 throw new HttpClientErrorException(HttpStatusCode.valueOf(403), "Password is incorrect.");
