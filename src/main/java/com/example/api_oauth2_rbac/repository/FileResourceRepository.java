@@ -9,4 +9,5 @@ import java.util.Optional;
 @Repository
 public interface FileResourceRepository extends JpaRepository<FileResource, Long> {
     Optional<FileResource> getFileResourcesById(Long id);
+    Optional<FileResource> getFileResourcesByStorageName(String storageName);
 }

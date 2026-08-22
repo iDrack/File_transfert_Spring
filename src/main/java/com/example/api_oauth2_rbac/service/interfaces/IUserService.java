@@ -10,7 +10,6 @@ import org.springframework.web.client.HttpClientErrorException;
 import java.util.List;
 import java.util.Set;
 
-//TODO: Add service to log out the current user.
 public interface IUserService {
     public User create(UserCreate userCreateDto) throws IllegalArgumentException;
 

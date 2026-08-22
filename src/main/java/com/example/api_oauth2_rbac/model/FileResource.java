@@ -17,18 +17,16 @@ import java.util.Set;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 public class FileResource extends Resources{
 
-    //TODO: Add service to transfert a file and create a resource with visibility
-    //TODO: Add service to share a file with a list of users with permissions
-    //TODO: Add a service to share a file one user and with permission
     //TODO: Add a service to update a resource data (visibility, shared with users, permission to user and default permission)
     //TODO: Add Annotation to check if a user is in the shared user list of a resource
 
-    @Column(name = "original_name", nullable = false, length = 50)
-    private String originalName;
-
-    @Column(name = "location_path", nullable = false, length = 255)
+    //name correspond to original filename
+    @Column(name = "storage_name", nullable = false, length = 255)
     @EqualsAndHashCode.Include
-    private String locationPath;
+    private String storageName;
+
+    @Column(name = "size", nullable = false, length = 100)
+    private long size;
 
     @Column(name = "mime_type", nullable = false, length = 255)
     private String mimeType;
@@ -38,18 +36,17 @@ public class FileResource extends Resources{
         setType("file");
     }
 
-    public FileResource(String originalName, String locationPath, String mimeType) {
+    public FileResource(String storageName, Long size, String mimeType) {
         super();
-        this.originalName = originalName;
-        this.locationPath = locationPath;
+        this.storageName = storageName;
         this.mimeType = mimeType;
         setType("file");
     }
 
-    public FileResource(Long id, String name, String type, Long ownerIs, User owner, LocalDateTime createdAt, Visibility visibility, Set<ResourceSharedWithPermission> sharedWithUsers, String originalName, String locationPath, String mimeType) {
-        super(id, name, type, ownerIs, owner, createdAt, visibility, sharedWithUsers);
-        this.originalName = originalName;
-        this.locationPath = locationPath;
+    public FileResource(Long id, String originalName, String type, Long ownerIs, User owner, LocalDateTime createdAt, Visibility visibility, Set<ResourceSharedWithPermission> sharedWithUsers, long size, String storageName, String mimeType) {
+        super(id, originalName, type, ownerIs, owner, createdAt, visibility, sharedWithUsers);
+        this.size = size;
+        this.storageName = storageName;
         this.mimeType = mimeType;
     }
 }

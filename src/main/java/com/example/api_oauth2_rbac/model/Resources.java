@@ -26,7 +26,7 @@ public abstract class Resources {
     private String type;
 
     @Column(nullable = false)
-    private Long ownerIs;
+    private Long ownerId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", insertable = false, updatable = false)
@@ -41,13 +41,13 @@ public abstract class Resources {
     @OneToMany(mappedBy = "resource")
     private Set<ResourceSharedWithPermission> sharedWithUsers = new HashSet<>();
 
-    protected Resources(Long id, String name, String type, Long ownerIs, User owner,
+    protected Resources(Long id, String name, String type, Long ownerId, User owner,
                         LocalDateTime createdAt, Visibility visibility,
                         Set<ResourceSharedWithPermission> sharedWithUsers) {
         this.id = id;
         this.name = name;
         this.type = type;
-        this.ownerIs = ownerIs;
+        this.ownerId = ownerId;
         this.owner = owner;
         this.createdAt = createdAt;
         this.visibility = visibility;
