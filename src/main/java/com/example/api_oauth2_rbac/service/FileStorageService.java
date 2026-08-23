@@ -19,9 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -95,7 +93,8 @@ public class FileStorageService implements IFileStorageService {
     @Override
     public Resource loadAsResource(String storageFilename) throws IOException {
         Path file = root.resolve(storageFilename).normalize();
-        if (!Files.exists(file) || file.startsWith(root)) {
+
+        if (!Files.exists(file) || !file.startsWith(root)) {
             throw new FileNotFoundException("File not found");
         }
         return new UrlResource(file.toUri());
