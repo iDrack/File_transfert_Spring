@@ -44,8 +44,7 @@ public class FileStorageService implements IFileStorageService {
     @Override
     public FileResource store(MultipartFile file,
                               User user,
-                              Resources.Visibility visibility,
-                              Map<String, Set<Permission>> sharedWithUsers) throws IOException {
+                              Resources.Visibility visibility) throws IOException {
 
         String original = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
         if (original.contains("..")) {
@@ -75,15 +74,6 @@ public class FileStorageService implements IFileStorageService {
             visibility = Resources.Visibility.PRIVATE;
         }
         meta.setVisibility(visibility);
-
-        if (sharedWithUsers != null) {
-            sharedWithUsers.forEach((username, permissions) -> meta.getSharedWithUsers().add(
-                    ResourceSharedWithPermission.builder()
-                            .user(userService.getByUsername(username))
-                            .permissions(permissions)
-                            .build()
-            ));
-        }
 
         return fileRepo.save(meta);
     }

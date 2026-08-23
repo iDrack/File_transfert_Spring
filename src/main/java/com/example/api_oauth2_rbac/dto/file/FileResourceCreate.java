@@ -14,5 +14,4 @@ import java.util.Set;
 @NoArgsConstructor
 public class FileResourceCreate {
     Resources.Visibility visibility;
-    Map<String, Set<Permission>> sharedWithUsers; //username for key, permissions for value
 }

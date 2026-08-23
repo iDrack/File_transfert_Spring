@@ -14,8 +14,7 @@ import java.util.Set;
 public interface IFileStorageService {
     FileResource store(MultipartFile file,
                        User user,
-                       Resources.Visibility visibility,
-                       Map<String, Set<Permission>> sharedWithUsers) throws IOException;
+                       Resources.Visibility visibility) throws IOException;
 
     FileResource getFileResourceByStorageName(String storageName);
 

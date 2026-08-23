@@ -2,6 +2,7 @@ package com.example.api_oauth2_rbac.controller;
 
 import com.example.api_oauth2_rbac.dto.file.FileResourceCreate;
 import com.example.api_oauth2_rbac.model.FileResource;
+import com.example.api_oauth2_rbac.model.Resources;
 import com.example.api_oauth2_rbac.model.User;
 import com.example.api_oauth2_rbac.service.interfaces.IFileStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,12 +26,13 @@ public class FileTransferController {
     @Autowired
     private IFileStorageService fileStorageService;
 
-    @PostMapping("/upload")
+    @PostMapping(value = "/upload")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Map<String, String>> upload(
             @RequestParam("file") MultipartFile file,
-            @AuthenticationPrincipal User currentUser,
-            @RequestBody FileResourceCreate fileResourceCreateDto) throws IOException {
+            @RequestParam(value = "visibility", required = false) Resources.Visibility visibility,
+            @AuthenticationPrincipal User currentUser)
+            throws IOException {
 
         // basic validation
         if (file.isEmpty()) {
@@ -39,11 +41,14 @@ public class FileTransferController {
         // optional: check content type whitelist
         // if (!allowedTypes.contains(file.getContentType())) { ... }
 
+        if (visibility == null) {
+            visibility = Resources.Visibility.PRIVATE;
+        }
+
         FileResource meta = fileStorageService.store(
                 file,
                 currentUser,
-                fileResourceCreateDto.getVisibility(),
-                fileResourceCreateDto.getSharedWithUsers()
+                visibility
         );
 
         return ResponseEntity.ok(Map.of(
