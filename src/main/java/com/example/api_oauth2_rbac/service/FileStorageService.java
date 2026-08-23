@@ -71,7 +71,6 @@ public class FileStorageService implements IFileStorageService {
         meta.setMimeType(file.getContentType());
         meta.setSize(file.getSize());
         meta.setOwner(user);
-        meta.setOwnerId(user.getId());
         if (visibility == null) {
             visibility = Resources.Visibility.PRIVATE;
         }

@@ -42,8 +42,8 @@ public class FileResource extends Resources{
         setType("file");
     }
 
-    public FileResource(Long id, String originalName, String type, Long ownerIs, User owner, LocalDateTime createdAt, Visibility visibility, Set<ResourceSharedWithPermission> sharedWithUsers, long size, String storageName, String mimeType) {
-        super(id, originalName, type, ownerIs, owner, createdAt, visibility, sharedWithUsers);
+    public FileResource(Long id, String originalName, String type, User owner, LocalDateTime createdAt, Visibility visibility, Set<ResourceSharedWithPermission> sharedWithUsers, long size, String storageName, String mimeType) {
+        super(id, originalName, type, owner, createdAt, visibility, sharedWithUsers);
         this.size = size;
         this.storageName = storageName;
         this.mimeType = mimeType;
