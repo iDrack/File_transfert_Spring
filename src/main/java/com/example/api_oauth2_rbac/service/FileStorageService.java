@@ -26,7 +26,6 @@ import java.util.UUID;
 
 @Service
 public class FileStorageService implements IFileStorageService {
-    //TODO: Add service to share a file with a user
 
     //Files will be stored at /uploads
     private final Path root = Paths.get("uploads");

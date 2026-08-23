@@ -38,4 +38,19 @@ public class ResourceSharedWithPermission {
         if(! permission.toString().startsWith("RESOURCE_")) return false;
         return permissions.stream().anyMatch(p -> p.equals(permission));
     }
+
+    public Set<Permission> replacePermissions(Set<Permission> newPermissions) {
+        this.permissions = newPermissions;
+        return this.permissions;
+    }
+
+    public Set<Permission> updatePermissions(Set<Permission> newPermissions) {
+        newPermissions.forEach((newPermission -> {
+            if (this.permissions.stream().noneMatch(p -> p == newPermission)) {
+                this.permissions.add(newPermission);
+            }
+        }));
+        return this.permissions;
+    }
+
 }

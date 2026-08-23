@@ -17,7 +17,6 @@ import java.util.Set;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 public class FileResource extends Resources{
 
-    //TODO: Add a service to update a resource data (visibility, shared with users, permission to user and default permission)
     //TODO: Add Annotation to check if a user is in the shared user list of a resource
 
     //name correspond to original filename
