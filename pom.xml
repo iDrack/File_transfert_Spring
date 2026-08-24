@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.example</groupId>
-    <artifactId>API_OAuth2_RBAC</artifactId>
+    <artifactId>File_Transfert</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>API_OAuth2_RBAC</name>
-    <description>API_OAuth2_RBAC</description>
+    <name>File_Transfert</name>
+    <description>File_Transfert</description>
     <url/>
     <licenses>
         <license/>
