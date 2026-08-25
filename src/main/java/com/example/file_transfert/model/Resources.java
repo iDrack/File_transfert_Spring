@@ -63,7 +63,6 @@ public abstract class Resources {
         PUBLIC,
         PRIVATE,
         PROTECTED,
-        GROUP,
         READONLY,
     }
 }

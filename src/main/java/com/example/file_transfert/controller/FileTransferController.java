@@ -1,8 +1,10 @@
 package com.example.file_transfert.controller;
 
 import com.example.file_transfert.model.FileResource;
+import com.example.file_transfert.model.Permission;
 import com.example.file_transfert.model.Resources;
 import com.example.file_transfert.model.User;
+import com.example.file_transfert.security.annotation.IsSharedWithActiveUser;
 import com.example.file_transfert.service.interfaces.IFileStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -58,8 +60,10 @@ public class FileTransferController {
     }
 
     @GetMapping("/download/{filename:.+}")
+    @PreAuthorize("isAuthenticated()")
+    @IsSharedWithActiveUser(permission = Permission.RESOURCE_READ)
     public ResponseEntity<Resource> download(@PathVariable String filename) throws IOException {
-        //TODO: Check if the user is authorized to download a file (Permission.RESOURCE_READ) (need to be in the shared user list of the resource or owner)
+
         Resource resource = fileStorageService.loadAsResource(filename);
         String contentType = Files.probeContentType(Paths.get(resource.getURI()));
         if (contentType == null) {
