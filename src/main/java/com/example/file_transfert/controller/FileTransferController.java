@@ -1,11 +1,14 @@
 package com.example.file_transfert.controller;
 
+import com.example.file_transfert.dto.file.FileResourceAddUser;
+import com.example.file_transfert.dto.file.FileResourceAddUsers;
 import com.example.file_transfert.model.FileResource;
 import com.example.file_transfert.model.Permission;
 import com.example.file_transfert.model.Resources;
 import com.example.file_transfert.model.User;
 import com.example.file_transfert.security.annotation.IsSharedWithActiveUser;
 import com.example.file_transfert.service.interfaces.IFileStorageService;
+import com.example.file_transfert.service.interfaces.IResourcesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -20,12 +23,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/files")
 public class FileTransferController {
     @Autowired
     private IFileStorageService fileStorageService;
+    @Autowired
+    private IResourcesService resourcesService;
 
     @PostMapping(value = "/upload")
     @PreAuthorize("isAuthenticated()")
@@ -74,9 +80,79 @@ public class FileTransferController {
                 .body(resource);
     }
 
-    @GetMapping("/")
+    @GetMapping("")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Map<String,String>> getUserFilenames(@AuthenticationPrincipal User currentUser) {
-
+    public ResponseEntity<Set<String>> getUserFilenames(@AuthenticationPrincipal User currentUser) {
+        Set<String> filenames = fileStorageService.getFilenamesByOwner(currentUser);
+        return ResponseEntity.ok(filenames);
     }
+
+    @GetMapping("/public")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Set<String>> getPublicFilename() {
+        Set<String> filenames = fileStorageService.getPublicFilenames();
+        return ResponseEntity.ok(filenames);
+    }
+
+    @GetMapping("/shared")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Set<String>> getSharedFilename(@AuthenticationPrincipal User currentUser) {
+        Set<String> filenames = fileStorageService.getSharedFilename(currentUser.getUsername());
+        return ResponseEntity.ok(filenames);
+    }
+
+    @PutMapping("/share-with-user/{filename}")
+    @PreAuthorize("isAuthenticated()")
+    @IsSharedWithActiveUser(permission = Permission.RESOURCE_MANAGE_USERS)
+    public ResponseEntity<String> addUserToSharedList(
+            @PathVariable String filename,
+            @RequestBody FileResourceAddUser fileResourceAddUserDto
+    ) {
+        FileResource file = fileStorageService.getFileResourceByStorageName(filename);
+        if (file == null) {
+            ResponseEntity.status(404).body(Map.of("error", "File: " + filename + " not found"));
+        }
+        Map<String, Set<Permission>> userSetToMap = Map.of(fileResourceAddUserDto.getUsername(), fileResourceAddUserDto.getPermissions());
+        FileResource updatedFile = (FileResource) resourcesService.updateSharedUsers(file, userSetToMap);
+
+        return ResponseEntity.ok("File: " + filename + " is now shared with " + fileResourceAddUserDto.getUsername());
+    }
+
+    @PutMapping("/share-with-users/{filename}")
+    @PreAuthorize("isAuthenticated()")
+    @IsSharedWithActiveUser(permission = Permission.RESOURCE_MANAGE_USERS)
+    public ResponseEntity<String> addUsersToSharedList(
+            @PathVariable String filename,
+            @RequestBody FileResourceAddUsers fileResourceAddUsersDto
+    ) {
+        FileResource file = fileStorageService.getFileResourceByStorageName(filename);
+        if (file == null) {
+            ResponseEntity.status(404).body(Map.of("error", "File: " + filename + " not found"));
+        }
+        Map<String, Set<Permission>> userSetToMap = new java.util.HashMap<>(Map.of());
+        fileResourceAddUsersDto.getUsernames().forEach((username) -> {
+            userSetToMap.put(username,fileResourceAddUsersDto.getPermissions());
+        });
+
+        FileResource updatedFile = (FileResource) resourcesService.updateSharedUsers(file, userSetToMap);
+
+        return ResponseEntity.ok("File: " + filename + " is now shared with requested users");
+    }
+
+    @DeleteMapping("/revoke-sharing/{filename}")
+    @PreAuthorize("isAuthenticated()")
+    @IsSharedWithActiveUser(permission = Permission.RESOURCE_MANAGE_USERS)
+    public ResponseEntity<String> removeUserFromSharedList(@PathVariable String filename, @RequestBody Set<String> users) {
+        FileResource file = fileStorageService.getFileResourceByStorageName(filename);
+        if (file == null) {
+            ResponseEntity.status(404).body(Map.of("error", "File: " + filename + " not found"));
+        }
+        resourcesService.revokeSharingFromUsers(file, users);
+
+        return ResponseEntity.ok("File: " + filename + " is no longer shared with requested users");
+    }
+
+    //TODO: Endpoint pour révoquer une permission sur un fichier pour un utilisateur
+    //TODO: Endpoint pour ajouter une permission sur  un fichier à un utilisateur
+    //TODO: Endpoint pour modifier la liste des permissions d'un utilisateur sur un fichier
 }

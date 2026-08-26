@@ -2,6 +2,7 @@ package com.example.file_transfert.service.interfaces;
 
 import com.example.file_transfert.model.Permission;
 import com.example.file_transfert.model.Resources;
+import com.example.file_transfert.model.User;
 
 import java.util.Map;
 import java.util.Set;
@@ -15,6 +16,12 @@ public interface IResourcesService {
     Resources sharedWithNewUsers(Resources resource, Set<String> newUsers, Set<Permission> permissions);
 
     Resources updateSharedUsers(Resources resource, Map<String, Set<Permission>> newUsers);
+
+    Resources replaceUserPermission(Resources resource, String username, Set<Permission> newPermissions);
+
+    Resources addUserPermission(Resources resource, String username, Permission permission);
+
+    Resources revokeUserPermission(Resources resource, String username, Permission permission);
 
     Resources revokeSharingFromUsers(Resources resource, Set<String> usersToDelete);
 }

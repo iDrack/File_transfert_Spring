@@ -3,6 +3,7 @@ package com.example.file_transfert.security;
 import com.example.file_transfert.model.Permission;
 import com.example.file_transfert.model.ResourceSharedWithPermission;
 import com.example.file_transfert.model.Resources;
+import com.example.file_transfert.model.User;
 import com.example.file_transfert.repository.ResourcesRepository;
 import com.example.file_transfert.service.UserService;
 import com.example.file_transfert.service.interfaces.IResourcesService;
@@ -43,12 +44,14 @@ public class ResourcesService implements IResourcesService {
 
         newUsers.forEach((newUser) -> {
             if (oldUsers.stream().noneMatch(oldUser -> oldUser.getUser().getUsername().equals(newUser))) {
-                ResourceSharedWithPermission sharedUser = ResourceSharedWithPermission.builder()
-                        .user(userService.getByUsername(newUser))
-                        .resource(resource)
-                        .permissions(permissions)
-                        .build();
-                resource.getSharedWithUsers().add(sharedUser);
+                if (userService.getByUsername(newUser) != null) {
+                    ResourceSharedWithPermission sharedUser = ResourceSharedWithPermission.builder()
+                            .user(userService.getByUsername(newUser))
+                            .resource(resource)
+                            .permissions(permissions)
+                            .build();
+                    resource.getSharedWithUsers().add(sharedUser);
+                }
             }
         });
         resourcesRepository.save(resource);
@@ -67,21 +70,55 @@ public class ResourcesService implements IResourcesService {
 
         newUsers.forEach((username, permissions) -> {
             ResourceSharedWithPermission existing = existingByUsername.get(username);
-
+            //Already shared with user -> Replace its permissions
             if (existing != null) {
                 existing.replacePermissions(permissions);
             } else {
-                resource.getSharedWithUsers().add(
-                        ResourceSharedWithPermission.builder()
-                                .user(userService.getByUsername(username))
-                                .resource(resource)
-                                .permissions(permissions)
-                                .build()
-                );
+                if (userService.getByUsername(username) != null) {
+                    resource.getSharedWithUsers().add(
+                            ResourceSharedWithPermission.builder()
+                                    .user(userService.getByUsername(username))
+                                    .resource(resource)
+                                    .permissions(permissions)
+                                    .build()
+                    );
+                }
             }
         });
 
         resourcesRepository.save(resource);
+        return resource;
+    }
+
+    @Override
+    public Resources replaceUserPermission(Resources resource, String username, Set<Permission> newPermissions) {
+        ResourceSharedWithPermission userPermission = resource.findUser(username);
+        if (userPermission != null) {
+            userPermission.replacePermissions(newPermissions);
+            resourcesRepository.save(resource);
+        }
+        return resource;
+    }
+
+    @Override
+    public Resources addUserPermission(Resources resource, String username, Permission permission) {
+        ResourceSharedWithPermission userPermission = resource.findUser(username);
+        if (userPermission != null) {
+            if (userPermission.getPermissions().stream().noneMatch(p -> p.equals(permission)))
+                userPermission.getPermissions().add(permission);
+            resourcesRepository.save(resource);
+        }
+        return resource;
+    }
+
+    @Override
+    public Resources revokeUserPermission(Resources resource, String username, Permission permission) {
+        ResourceSharedWithPermission userPermission = resource.findUser(username);
+        if (userPermission != null) {
+            if (userPermission.getPermissions().stream().anyMatch(p -> p.equals(permission)))
+                userPermission.getPermissions().removeIf(p -> p.equals(permission));
+            resourcesRepository.save(resource);
+        }
         return resource;
     }
 

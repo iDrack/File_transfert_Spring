@@ -6,7 +6,6 @@ import com.example.file_transfert.model.User;
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Set;
 
@@ -19,7 +18,7 @@ public interface IFileStorageService {
 
     FileResource getFileResourceById(Long id);
 
-    Set<String> getFilenamesByOwnerUsername(User owner);
+    Set<String> getFilenamesByOwner(User owner);
 
     Set<String> getPublicFilenames();
 

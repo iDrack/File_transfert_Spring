@@ -93,7 +93,7 @@ public class FileStorageService implements IFileStorageService {
     }
 
     @Override
-    public Set<String> getFilenamesByOwnerUsername(User owner) {
+    public Set<String> getFilenamesByOwner(User owner) {
         return fileRepo.getFileResourcesByOwner(owner).stream().map(FileResource::getStorageName).collect(Collectors.toSet());
     }
 

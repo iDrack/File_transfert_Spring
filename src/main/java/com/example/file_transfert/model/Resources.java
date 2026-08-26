@@ -65,4 +65,11 @@ public abstract class Resources {
         PROTECTED,
         READONLY,
     }
+
+    public ResourceSharedWithPermission findUser(String username) {
+        return this.getSharedWithUsers().stream()
+                .filter(r ->
+                        r.getUser().getUsername().equals(username))
+                .findFirst().orElse(null);
+    }
 }
