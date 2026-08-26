@@ -20,7 +20,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class FileStorageService implements IFileStorageService {
@@ -88,6 +90,25 @@ public class FileStorageService implements IFileStorageService {
         return fileRepo.getFileResourcesById(id).orElseThrow(
                 () -> new RuntimeException("File with id: " + id + " is missing.")
         );
+    }
+
+    @Override
+    public Set<String> getFilenamesByOwnerUsername(User owner) {
+        return fileRepo.getFileResourcesByOwner(owner).stream().map(FileResource::getStorageName).collect(Collectors.toSet());
+    }
+
+    @Override
+    public Set<String> getPublicFilenames() {
+        return fileRepo.getFileResources().stream()
+                .filter(f -> f.getVisibility().equals(Resources.Visibility.PUBLIC))
+                .map(FileResource::getStorageName)
+                .collect(Collectors.toSet());
+    }
+
+    @Override
+    public Set<String> getSharedFilename(String username) {
+        Long userId = userService.getByUsername(username).getId();
+        return fileRepo.getFileResourcesSharedWithUser(userId).stream().map(FileResource::getStorageName).collect(Collectors.toSet());
     }
 
     @Override

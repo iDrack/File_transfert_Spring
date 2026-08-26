@@ -6,7 +6,9 @@ import com.example.file_transfert.model.User;
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Set;
 
 public interface IFileStorageService {
     FileResource store(MultipartFile file,
@@ -16,6 +18,12 @@ public interface IFileStorageService {
     FileResource getFileResourceByStorageName(String storageName);
 
     FileResource getFileResourceById(Long id);
+
+    Set<String> getFilenamesByOwnerUsername(User owner);
+
+    Set<String> getPublicFilenames();
+
+    Set<String> getSharedFilename(String username);
 
     Resource loadAsResource(String storageFilename) throws IOException;
 

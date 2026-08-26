@@ -63,7 +63,6 @@ public class FileTransferController {
     @PreAuthorize("isAuthenticated()")
     @IsSharedWithActiveUser(permission = Permission.RESOURCE_READ)
     public ResponseEntity<Resource> download(@PathVariable String filename) throws IOException {
-
         Resource resource = fileStorageService.loadAsResource(filename);
         String contentType = Files.probeContentType(Paths.get(resource.getURI()));
         if (contentType == null) {
@@ -73,5 +72,11 @@ public class FileTransferController {
                 .contentType(MediaType.parseMediaType(contentType))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
                 .body(resource);
+    }
+
+    @GetMapping("/")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Map<String,String>> getUserFilenames(@AuthenticationPrincipal User currentUser) {
+
     }
 }
