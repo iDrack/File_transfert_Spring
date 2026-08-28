@@ -1,5 +1,7 @@
 package com.example.file_transfert.service;
 
+import com.example.file_transfert.dto.file.FileResourceMetadata;
+import com.example.file_transfert.dto.file.FileResourceMetadataSet;
 import com.example.file_transfert.model.*;
 import com.example.file_transfert.repository.FileResourceRepository;
 import com.example.file_transfert.service.interfaces.IFileStorageService;
@@ -19,9 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,6 +29,8 @@ public class FileStorageService implements IFileStorageService {
 
     //Files will be stored at /uploads
     private final Path root = Paths.get("uploads");
+
+    private final int limit = 20;
 
     @Autowired
     private UserService userService;
@@ -92,23 +94,43 @@ public class FileStorageService implements IFileStorageService {
         );
     }
 
-    @Override
-    public Set<String> getFilenamesByOwner(User owner) {
-        return fileRepo.getFileResourcesByOwner(owner).stream().map(FileResource::getStorageName).collect(Collectors.toSet());
+    List<FileResourceMetadata> getSubList(ArrayList<FileResourceMetadata> files, int page) {
+        int offset = (page - 1) * this.limit;
+        int offsetEnd = page * this.limit;
+        return files.subList(offset, offsetEnd);
     }
 
     @Override
-    public Set<String> getPublicFilenames() {
-        return fileRepo.getFileResources().stream()
+    public FileResourceMetadataSet generateMetadata(List<FileResourceMetadata> files, int page) {
+        int totalPages = (int) Math.ceil((double) files.size() /this.limit);
+        int prev = (page - 1 <= 0) ? null : page - 1;
+        int next = (page + 1 > totalPages) ? null : page + 1;
+        return new FileResourceMetadataSet(page, prev, next, files.size(), this.limit, totalPages, files);
+    }
+
+    @Override
+    public List<FileResourceMetadata> getFilesMetaByOwner(User owner, int page) {
+        return getSubList(fileRepo.getFileResourcesByOwner(owner)
+                .stream()
+                .map(FileResource::toMetaData)
+                .collect(Collectors.toCollection(ArrayList::new)), page);
+    }
+
+    @Override
+    public List<FileResourceMetadata> getPublicFileMeta(int page) {
+        return getSubList(fileRepo.getFileResources().stream()
                 .filter(f -> f.getVisibility().equals(Resources.Visibility.PUBLIC))
-                .map(FileResource::getStorageName)
-                .collect(Collectors.toSet());
+                .map(FileResource::toMetaData)
+                .collect(Collectors.toCollection(ArrayList::new)), page);
     }
 
     @Override
-    public Set<String> getSharedFilename(String username) {
+    public List<FileResourceMetadata> getSharedFileMeta(String username, int page) {
         Long userId = userService.getByUsername(username).getId();
-        return fileRepo.getFileResourcesSharedWithUser(userId).stream().map(FileResource::getStorageName).collect(Collectors.toSet());
+        return getSubList(fileRepo.getFileResourcesSharedWithUser(userId)
+                .stream()
+                .map(FileResource::toMetaData)
+                .collect(Collectors.toCollection(ArrayList::new)), page);
     }
 
     @Override

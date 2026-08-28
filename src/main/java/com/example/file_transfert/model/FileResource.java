@@ -1,5 +1,6 @@
 package com.example.file_transfert.model;
 
+import com.example.file_transfert.dto.file.FileResourceMetadata;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -15,7 +16,7 @@ import java.util.Set;
 @Builder
 @Data
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
-public class FileResource extends Resources{
+public class FileResource extends Resources {
 
     //TODO: Add Annotation to check if a user is in the shared user list of a resource
 
@@ -47,5 +48,9 @@ public class FileResource extends Resources{
         this.size = size;
         this.storageName = storageName;
         this.mimeType = mimeType;
+    }
+
+    public FileResourceMetadata toMetaData() {
+        return new FileResourceMetadata(this.storageName, this.mimeType, this.getOwner().getUsername(), this.size, this.getVisibility());
     }
 }

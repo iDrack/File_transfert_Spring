@@ -2,6 +2,8 @@ package com.example.file_transfert.controller;
 
 import com.example.file_transfert.dto.file.FileResourceAddUser;
 import com.example.file_transfert.dto.file.FileResourceAddUsers;
+import com.example.file_transfert.dto.file.FileResourceMetadata;
+import com.example.file_transfert.dto.file.FileResourceMetadataSet;
 import com.example.file_transfert.model.FileResource;
 import com.example.file_transfert.model.Permission;
 import com.example.file_transfert.model.Resources;
@@ -22,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -80,25 +83,34 @@ public class FileTransferController {
                 .body(resource);
     }
 
+
     @GetMapping("")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Set<String>> getUserFilenames(@AuthenticationPrincipal User currentUser) {
-        Set<String> filenames = fileStorageService.getFilenamesByOwner(currentUser);
-        return ResponseEntity.ok(filenames);
+    public ResponseEntity<FileResourceMetadataSet> getUserFilenames(
+            @AuthenticationPrincipal User currentUser,
+            @RequestParam int page
+    ) {
+        if (page <= 0) page = 1;
+        List<FileResourceMetadata> files = fileStorageService.getFilesMetaByOwner(currentUser, page);
+        return ResponseEntity.ok(fileStorageService.generateMetadata(files, page));
     }
 
     @GetMapping("/public")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Set<String>> getPublicFilename() {
-        Set<String> filenames = fileStorageService.getPublicFilenames();
-        return ResponseEntity.ok(filenames);
+    public ResponseEntity<FileResourceMetadataSet> getPublicFilename(@RequestParam int page) {
+        if (page <= 0) page = 1;
+        List<FileResourceMetadata> files = fileStorageService.getPublicFileMeta(page);
+        return ResponseEntity.ok(fileStorageService.generateMetadata(files, page));
     }
 
     @GetMapping("/shared")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Set<String>> getSharedFilename(@AuthenticationPrincipal User currentUser) {
-        Set<String> filenames = fileStorageService.getSharedFilename(currentUser.getUsername());
-        return ResponseEntity.ok(filenames);
+    public ResponseEntity<FileResourceMetadataSet> getSharedFilename(
+            @AuthenticationPrincipal User currentUser,
+            @RequestParam int page) {
+        if (page <= 0) page = 1;
+        List<FileResourceMetadata> files = fileStorageService.getSharedFileMeta(currentUser.getUsername(), page);
+        return ResponseEntity.ok(fileStorageService.generateMetadata(files, page));
     }
 
     @PutMapping("/share-with-user/{filename}")
@@ -131,7 +143,7 @@ public class FileTransferController {
         }
         Map<String, Set<Permission>> userSetToMap = new java.util.HashMap<>(Map.of());
         fileResourceAddUsersDto.getUsernames().forEach((username) -> {
-            userSetToMap.put(username,fileResourceAddUsersDto.getPermissions());
+            userSetToMap.put(username, fileResourceAddUsersDto.getPermissions());
         });
 
         FileResource updatedFile = (FileResource) resourcesService.updateSharedUsers(file, userSetToMap);

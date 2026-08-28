@@ -1,5 +1,7 @@
 package com.example.file_transfert.service.interfaces;
 
+import com.example.file_transfert.dto.file.FileResourceMetadata;
+import com.example.file_transfert.dto.file.FileResourceMetadataSet;
 import com.example.file_transfert.model.FileResource;
 import com.example.file_transfert.model.Resources;
 import com.example.file_transfert.model.User;
@@ -7,6 +9,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 public interface IFileStorageService {
@@ -18,11 +22,13 @@ public interface IFileStorageService {
 
     FileResource getFileResourceById(Long id);
 
-    Set<String> getFilenamesByOwner(User owner);
+    FileResourceMetadataSet generateMetadata(List<FileResourceMetadata> files, int page);
 
-    Set<String> getPublicFilenames();
+    List<FileResourceMetadata> getFilesMetaByOwner(User owner, int page);
 
-    Set<String> getSharedFilename(String username);
+    List<FileResourceMetadata> getPublicFileMeta(int page);
+
+    List<FileResourceMetadata> getSharedFileMeta(String username, int page);
 
     Resource loadAsResource(String storageFilename) throws IOException;
 
