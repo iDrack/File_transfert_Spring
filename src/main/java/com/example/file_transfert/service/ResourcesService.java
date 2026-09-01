@@ -1,11 +1,9 @@
-package com.example.file_transfert.security;
+package com.example.file_transfert.service;
 
 import com.example.file_transfert.model.Permission;
 import com.example.file_transfert.model.ResourceSharedWithPermission;
 import com.example.file_transfert.model.Resources;
-import com.example.file_transfert.model.User;
 import com.example.file_transfert.repository.ResourcesRepository;
-import com.example.file_transfert.service.UserService;
 import com.example.file_transfert.service.interfaces.IResourcesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

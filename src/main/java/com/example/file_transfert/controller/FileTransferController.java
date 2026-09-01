@@ -1,9 +1,6 @@
 package com.example.file_transfert.controller;
 
-import com.example.file_transfert.dto.file.FileResourceAddUser;
-import com.example.file_transfert.dto.file.FileResourceAddUsers;
-import com.example.file_transfert.dto.file.FileResourceMetadata;
-import com.example.file_transfert.dto.file.FileResourceMetadataSet;
+import com.example.file_transfert.dto.file.*;
 import com.example.file_transfert.model.FileResource;
 import com.example.file_transfert.model.Permission;
 import com.example.file_transfert.model.Resources;
@@ -113,7 +110,7 @@ public class FileTransferController {
         return ResponseEntity.ok(fileStorageService.generateMetadata(files, page));
     }
 
-    @PutMapping("/share-with-user/{filename}")
+    @PutMapping("/share-with-user/{filename:.+}")
     @PreAuthorize("isAuthenticated()")
     @IsSharedWithActiveUser(permission = Permission.RESOURCE_MANAGE_USERS)
     public ResponseEntity<String> addUserToSharedList(
@@ -130,7 +127,7 @@ public class FileTransferController {
         return ResponseEntity.ok("File: " + filename + " is now shared with " + fileResourceAddUserDto.getUsername());
     }
 
-    @PutMapping("/share-with-users/{filename}")
+    @PutMapping("/share-with-users/{filename:.+}")
     @PreAuthorize("isAuthenticated()")
     @IsSharedWithActiveUser(permission = Permission.RESOURCE_MANAGE_USERS)
     public ResponseEntity<String> addUsersToSharedList(
@@ -151,20 +148,52 @@ public class FileTransferController {
         return ResponseEntity.ok("File: " + filename + " is now shared with requested users");
     }
 
-    @DeleteMapping("/revoke-sharing/{filename}")
+    @DeleteMapping("/revoke-sharing/{filename:.+}")
     @PreAuthorize("isAuthenticated()")
     @IsSharedWithActiveUser(permission = Permission.RESOURCE_MANAGE_USERS)
-    public ResponseEntity<String> removeUserFromSharedList(@PathVariable String filename, @RequestBody Set<String> users) {
+    public ResponseEntity<String> removeUserFromSharedList(
+            @PathVariable String filename,
+            @RequestBody Set<String> users) {
         FileResource file = fileStorageService.getFileResourceByStorageName(filename);
         if (file == null) {
-            ResponseEntity.status(404).body(Map.of("error", "File: " + filename + " not found"));
+            return ResponseEntity.status(404).body("File: " + filename + " not found");
         }
         resourcesService.revokeSharingFromUsers(file, users);
 
         return ResponseEntity.ok("File: " + filename + " is no longer shared with requested users");
     }
 
-    //TODO: Endpoint pour révoquer une permission sur un fichier pour un utilisateur
-    //TODO: Endpoint pour ajouter une permission sur  un fichier à un utilisateur
-    //TODO: Endpoint pour modifier la liste des permissions d'un utilisateur sur un fichier
+    @PutMapping("/add-permission/{filename:.+}")
+    @PreAuthorize("isAuthenticated()")
+    @IsSharedWithActiveUser(permission = Permission.RESOURCE_MANAGE_USERS)
+    public ResponseEntity<String> addPermissionsToUser(
+            @PathVariable String filename,
+            @RequestBody FileResourcesUpdatePermission dto) {
+        FileResource file = fileStorageService.getFileResourceByStorageName(filename);
+        if (file == null) {
+            return ResponseEntity.status(404).body("File: " + filename + " not found");
+        }
+        dto.getPermissions().forEach((p) -> {
+            resourcesService.addUserPermission(file, dto.getUsername(), p);
+        });
+
+        return ResponseEntity.ok(dto.getUsername() + " permissions has been updated for " + filename);
+    }
+
+    @DeleteMapping("/revoke-permission/{filename:.+}")
+    @PreAuthorize("isAuthenticated()")
+    @IsSharedWithActiveUser(permission = Permission.RESOURCE_MANAGE_USERS)
+    public ResponseEntity<String> revokePermissionsFromUser(
+            @PathVariable String filename,
+            @RequestBody FileResourcesUpdatePermission dto) {
+        FileResource file = fileStorageService.getFileResourceByStorageName(filename);
+        if (file == null) {
+            return ResponseEntity.status(404).body("File: " + filename + " not found");
+        }
+        dto.getPermissions().forEach((p) -> {
+            resourcesService.revokeUserPermission(file, dto.getUsername(), p);
+        });
+
+        return ResponseEntity.ok(dto.getUsername() + " permissions has been updated for " + filename);
+    }
 }
