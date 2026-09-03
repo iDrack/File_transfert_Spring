@@ -173,9 +173,7 @@ public class FileTransferController {
         if (file == null) {
             return ResponseEntity.status(404).body("File: " + filename + " not found");
         }
-        dto.getPermissions().forEach((p) -> {
-            resourcesService.addUserPermission(file, dto.getUsername(), p);
-        });
+        resourcesService.addUserPermissions(file, dto.getUsername(), dto.getPermissions());
 
         return ResponseEntity.ok(dto.getUsername() + " permissions has been updated for " + filename);
     }
@@ -195,5 +193,21 @@ public class FileTransferController {
         });
 
         return ResponseEntity.ok(dto.getUsername() + " permissions has been updated for " + filename);
+    }
+
+    @PutMapping("/visibility/{filename:.+}")
+    @PreAuthorize("isAuthenticated")
+    @IsSharedWithActiveUser(permission = Permission.RESOURCE_MANAGE_VISIBILITY)
+    public ResponseEntity<String> updateFileVisibility(
+            @PathVariable String filename,
+            @RequestBody Resources.Visibility visibility
+    ) {
+        FileResource file = fileStorageService.getFileResourceByStorageName(filename);
+        if (file == null) {
+            return ResponseEntity.status(404).body("File: " + filename + " not found");
+        }
+        resourcesService.updateVisibility(file, visibility);
+        return ResponseEntity.ok(filename + " is now " + visibility);
+
     }
 }

@@ -2,7 +2,6 @@ package com.example.file_transfert.service.interfaces;
 
 import com.example.file_transfert.model.Permission;
 import com.example.file_transfert.model.Resources;
-import com.example.file_transfert.model.User;
 
 import java.util.Map;
 import java.util.Set;
@@ -19,7 +18,7 @@ public interface IResourcesService {
 
     Resources replaceUserPermission(Resources resource, String username, Set<Permission> newPermissions);
 
-    Resources addUserPermission(Resources resource, String username, Permission permission);
+    Resources addUserPermissions(Resources resource, String username, Set<Permission> newPermissions);
 
     Resources revokeUserPermission(Resources resource, String username, Permission permission);
 
