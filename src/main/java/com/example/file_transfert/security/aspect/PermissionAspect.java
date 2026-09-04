@@ -2,9 +2,13 @@ package com.example.file_transfert.security.aspect;
 
 import com.example.file_transfert.exception.InsufficientPermissionException;
 import com.example.file_transfert.model.Permission;
+import com.example.file_transfert.model.User;
+import com.example.file_transfert.security.annotation.IsOwner;
 import com.example.file_transfert.security.annotation.RequirePermission;
 import com.example.file_transfert.security.annotation.IsSharedWithActiveUser;
+import com.example.file_transfert.service.UserService;
 import com.example.file_transfert.service.interfaces.IAccessControlService;
+import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -16,13 +20,17 @@ import org.springframework.stereotype.Component;
 
 import org.aspectj.lang.reflect.MethodSignature;
 
+import java.util.Arrays;
+
 @Aspect
 @Component
 public class PermissionAspect {
     private final IAccessControlService accessControlService;
+    private final UserService userService;
 
-    public PermissionAspect(IAccessControlService accessControlService) {
+    public PermissionAspect(IAccessControlService accessControlService, UserService userService) {
         this.accessControlService = accessControlService;
+        this.userService = userService;
     }
 
     @Around("@annotation(requirePermission)")
@@ -41,31 +49,39 @@ public class PermissionAspect {
         return joinPoint.proceed();
     }
 
+    @Around("@annotation(isOwner)")
+    public Object checkIfActiveUserIsOwner(ProceedingJoinPoint joinPoint, IsOwner isOwner) throws Throwable {
+        PermissionContext ctx = resolvePermissionContext(joinPoint);
+
+        if (ctx.filename == null) throw new IllegalArgumentException("Missing Argument");
+        accessControlService.checkUserOwnership(ctx.username, ctx.filename);
+        return joinPoint.proceed();
+    }
+
     @Around("@annotation(isSharedWithActiveUser)")
     public Object checkIfFileIsSharedWithConnectedUser(ProceedingJoinPoint joinPoint, IsSharedWithActiveUser isSharedWithActiveUser) throws Throwable {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()
-                || authentication instanceof AnonymousAuthenticationToken) {
-            throw new AccessDeniedException("User is not authenticated.");
-        }
-        String username = authentication.getName();
+        PermissionContext ctx = resolvePermissionContext(joinPoint);
+        if (ctx.filename == null) throw new IllegalArgumentException("Missing Argument");
 
-        MethodSignature sig = (MethodSignature) joinPoint.getSignature();
-        String names[] = sig.getParameterNames();
-        Object[] args = joinPoint.getArgs();
-
-        String filename = null;
-        for (int i = 0; i < filename.length(); i++) {
-            if (names[i].equals(isSharedWithActiveUser.value())) {
-                filename = (String) args[i];
-                break;
-            }
-        }
-        if (filename == null) throw new IllegalArgumentException("Missing Argument");
-
-        if (!accessControlService.isFileSharedWith(username, filename, isSharedWithActiveUser.permission())) {
+        if (!accessControlService.isFileSharedWith(ctx.username, ctx.filename, isSharedWithActiveUser.permission())) {
             throw new AccessDeniedException("You cannot access this file");
         }
         return joinPoint.proceed();
     }
+
+    private PermissionContext resolvePermissionContext(JoinPoint joinPoint) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username =authentication.getName();
+
+        Object[] args = joinPoint.getArgs();
+        String filename = Arrays.stream(args)
+                .filter(String.class::isInstance)
+                .map(String.class::cast)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Filename not found in method arguments"));
+
+        return new PermissionContext(username, filename);
+    }
+
+    private record PermissionContext(String username, String filename) {}
 }

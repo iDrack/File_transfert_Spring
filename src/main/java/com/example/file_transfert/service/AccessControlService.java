@@ -6,9 +6,11 @@ import com.example.file_transfert.service.interfaces.IAccessControlService;
 import com.example.file_transfert.service.interfaces.IFileStorageService;
 import com.example.file_transfert.service.interfaces.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.Set;
 
@@ -57,16 +59,25 @@ public class AccessControlService implements IAccessControlService {
     public boolean isResourceSharedWith(String username, ResourceSharedWithPermission res, Permission permission) throws InsufficientPermissionException {
 
         if (!res.getUser().getUsername().equals(username)) {
-            return false;
+            throw new InsufficientPermissionException(permission);
         }
 
         if (res.getResource().getVisibility().equals(Resources.Visibility.READONLY) && !permission.equals(Permission.RESOURCE_READ)) {
-            return false;
+            throw new InsufficientPermissionException(Permission.RESOURCE_READ);
         }
 
-        if (res.getPermissions().stream().anyMatch(p -> p.equals(permission))) {
+        if (res.getPermissions().stream().noneMatch(p -> p.equals(permission))) {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void checkUserOwnership(String username, String filename) throws HttpClientErrorException {
+        FileResource file = storage.getFileResourceByStorageName(filename);
+        User user = userService.getByUsername(username);
+        if (!user.equals(file.getOwner())) {
+            throw new HttpClientErrorException(HttpStatusCode.valueOf(403), "Only the owner can execute this action.");
+        }
     }
 }

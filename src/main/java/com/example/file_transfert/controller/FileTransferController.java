@@ -5,7 +5,9 @@ import com.example.file_transfert.model.FileResource;
 import com.example.file_transfert.model.Permission;
 import com.example.file_transfert.model.Resources;
 import com.example.file_transfert.model.User;
+import com.example.file_transfert.security.annotation.IsOwner;
 import com.example.file_transfert.security.annotation.IsSharedWithActiveUser;
+import com.example.file_transfert.service.UserService;
 import com.example.file_transfert.service.interfaces.IFileStorageService;
 import com.example.file_transfert.service.interfaces.IResourcesService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +34,8 @@ public class FileTransferController {
     private IFileStorageService fileStorageService;
     @Autowired
     private IResourcesService resourcesService;
+    @Autowired
+    private UserService userService;
 
     @PostMapping(value = "/upload")
     @PreAuthorize("isAuthenticated()")
@@ -210,4 +214,23 @@ public class FileTransferController {
         return ResponseEntity.ok(filename + " is now " + visibility);
 
     }
+
+    @PutMapping("/transfert-ownership/{filename:.+}")
+    @PreAuthorize("isAuthenticated")
+    @IsOwner()
+    public ResponseEntity<String> transfertOwnership(@PathVariable String filename, @RequestBody String newOwnerUsername) {
+        if (newOwnerUsername.isBlank()) {
+            return ResponseEntity.status(400).body("New owner username is empty.");
+        }
+        if (userService.getByUsername(newOwnerUsername) == null) {
+            return ResponseEntity.status(404).body("Uer: " + newOwnerUsername + " not found");
+        }
+        FileResource file = fileStorageService.getFileResourceByStorageName(filename);
+        if (file == null) {
+            return ResponseEntity.status(404).body("File: " + filename + " not found");
+        }
+        Resources res = resourcesService.changeOwnership(file, newOwnerUsername);
+        return ResponseEntity.ok(newOwnerUsername + " is now the owner of " + filename);
+    }
+
 }

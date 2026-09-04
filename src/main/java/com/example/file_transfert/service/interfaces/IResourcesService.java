@@ -23,4 +23,6 @@ public interface IResourcesService {
     Resources revokeUserPermission(Resources resource, String username, Permission permission);
 
     Resources revokeSharingFromUsers(Resources resource, Set<String> usersToDelete);
+
+    Resources changeOwnership(Resources resources, String username);
 }

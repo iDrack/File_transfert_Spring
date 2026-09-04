@@ -176,4 +176,19 @@ public class ResourcesService implements IResourcesService {
         );
         return resource;
     }
+
+    /**
+     * Change ownership of a file to the user with specified username
+     * @param resource resource to transfert
+     * @param username new owner's username
+     * @return updated resource
+     */
+    @Override
+    public Resources changeOwnership(Resources resource, String username) {
+        if (!resource.getOwner().getUsername().equals(username)) {
+            resource.setOwner(userService.getByUsername(username));
+            resourcesRepository.save(resource);
+        }
+        return resource;
+    }
 }
