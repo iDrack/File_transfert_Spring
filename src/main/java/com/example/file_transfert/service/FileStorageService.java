@@ -112,7 +112,7 @@ public class FileStorageService implements IFileStorageService {
     public List<FileResourceMetadata> getFilesMetaByOwner(User owner, int page) {
         return getSubList(fileRepo.getFileResourcesByOwner(owner)
                 .stream()
-                .map(FileResource::toMetaData)
+                .map(f -> f.toMetaData(owner.getId()))
                 .collect(Collectors.toCollection(ArrayList::new)), page);
     }
 
@@ -120,7 +120,7 @@ public class FileStorageService implements IFileStorageService {
     public List<FileResourceMetadata> getPublicFileMeta(int page) {
         return getSubList(fileRepo.getFileResources().stream()
                 .filter(f -> f.getVisibility().equals(Resources.Visibility.PUBLIC))
-                .map(FileResource::toMetaData)
+                .map(f -> f.toMetaData(null))
                 .collect(Collectors.toCollection(ArrayList::new)), page);
     }
 
@@ -129,7 +129,7 @@ public class FileStorageService implements IFileStorageService {
         Long userId = userService.getByUsername(username).getId();
         return getSubList(fileRepo.getFileResourcesSharedWithUser(userId)
                 .stream()
-                .map(FileResource::toMetaData)
+                .map(f -> f.toMetaData(userId))
                 .collect(Collectors.toCollection(ArrayList::new)), page);
     }
 

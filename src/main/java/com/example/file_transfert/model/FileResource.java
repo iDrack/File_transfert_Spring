@@ -8,8 +8,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.lang.reflect.Array;
 import java.time.LocalDateTime;
-import java.util.Set;
+import java.util.*;
 
 @Entity
 @Table(name = "file_resources")
@@ -17,8 +18,6 @@ import java.util.Set;
 @Data
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 public class FileResource extends Resources {
-
-    //TODO: Add Annotation to check if a user is in the shared user list of a resource
 
     //name correspond to original filename
     @Column(name = "storage_name", nullable = false, length = 255)
@@ -50,7 +49,22 @@ public class FileResource extends Resources {
         this.mimeType = mimeType;
     }
 
-    public FileResourceMetadata toMetaData() {
-        return new FileResourceMetadata(this.storageName, this.mimeType, this.getOwner().getUsername(), this.size, this.getVisibility());
+    public FileResourceMetadata toMetaData(Long userId) {
+        Set<Permission> permissions = new HashSet<>();
+        if (userId != null) {
+            if (Objects.equals(userId, this.getOwner().getId())) {
+                permissions.addAll(List.of(
+                        Permission.RESOURCE_READ,
+                        Permission.RESOURCE_UPDATE,
+                        Permission.USER_DELETE,
+                        Permission.RESOURCE_MANAGE_USERS,
+                        Permission.RESOURCE_MANAGE_VISIBILITY));
+            } else {
+                permissions = this.getSharedWithUsers().stream()
+                        .filter(r -> Objects.equals(r.getUser().getId(), userId)).findFirst().get().getPermissions();
+            }
+        }
+
+        return new FileResourceMetadata(this.storageName, this.mimeType, this.getOwner().getUsername(), this.size, permissions, this.getVisibility());
     }
 }
