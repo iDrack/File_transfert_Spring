@@ -184,6 +184,7 @@ public class ResourcesService implements IResourcesService {
         resource.getSharedWithUsers().removeIf(sharedUser ->
                 usersToDelete.contains(sharedUser.getUser().getUsername())
         );
+        resourcesRepository.save(resource);
         return resource;
     }
 

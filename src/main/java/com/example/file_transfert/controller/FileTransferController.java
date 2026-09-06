@@ -115,7 +115,7 @@ public class FileTransferController {
         return ResponseEntity.ok(fileStorageService.generateMetadata(files, page));
     }
 
-    @GetMapping("/whos-has-access/{filename:.+}")
+    @GetMapping("/who-has-access/{filename:.+}")
     @PreAuthorize("isAuthenticated()")
     @IsSharedWithActiveUser(permission = Permission.RESOURCE_READ)
     public ResponseEntity<WhoHasAccess> whoHasAccessToFile(@PathVariable String filename ) {
@@ -171,12 +171,12 @@ public class FileTransferController {
     @IsSharedWithActiveUser(permission = Permission.RESOURCE_MANAGE_USERS)
     public ResponseEntity<String> removeUserFromSharedList(
             @PathVariable String filename,
-            @RequestBody Set<String> users) {
+            @RequestBody FileRevokeSharing users) {
         FileResource file = fileStorageService.getFileResourceByStorageName(filename);
         if (file == null) {
             return ResponseEntity.status(404).body("File: " + filename + " not found");
         }
-        resourcesService.revokeSharingFromUsers(file, users);
+        resourcesService.revokeSharingFromUsers(file, users.getUsernames());
 
         return ResponseEntity.ok("File: " + filename + " is no longer shared with requested users");
     }
