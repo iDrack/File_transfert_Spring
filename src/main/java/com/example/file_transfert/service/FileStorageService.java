@@ -112,7 +112,8 @@ public class FileStorageService implements IFileStorageService {
 
     @Override
     public List<FileResourceMetadata> getFilesMetaByOwner(User owner, int page) {
-        return getSubList(fileRepo.getFileResourcesByOwner(owner)
+        Set<FileResource> files = fileRepo.getFileResourcesByOwner_Id(owner.getId());
+        return getSubList(files
                 .stream()
                 .map(f -> f.toMetaData(owner.getId()))
                 .collect(Collectors.toCollection(ArrayList::new)), page);

@@ -89,13 +89,15 @@ public class FileTransferController {
             @RequestParam(defaultValue = "1") int page
     ) {
         if (page <= 0) page = 1;
+        System.out.println(currentUser.getUsername());
+        System.out.println(currentUser.getId());
         List<FileResourceMetadata> files = fileStorageService.getFilesMetaByOwner(currentUser, page);
         return ResponseEntity.ok(fileStorageService.generateMetadata(files, page));
     }
 
     @GetMapping("/public")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<FileResourceMetadataSet> getPublicFilename(@RequestParam int page) {
+    public ResponseEntity<FileResourceMetadataSet> getPublicFilename(@RequestParam(defaultValue = "1") int page) {
         if (page <= 0) page = 1;
         List<FileResourceMetadata> files = fileStorageService.getPublicFileMeta(page);
         return ResponseEntity.ok(fileStorageService.generateMetadata(files, page));
@@ -105,7 +107,7 @@ public class FileTransferController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<FileResourceMetadataSet> getSharedFilename(
             @AuthenticationPrincipal User currentUser,
-            @RequestParam int page) {
+            @RequestParam(defaultValue = "1") int page) {
         if (page <= 0) page = 1;
         List<FileResourceMetadata> files = fileStorageService.getSharedFileMeta(currentUser.getUsername(), page);
         return ResponseEntity.ok(fileStorageService.generateMetadata(files, page));

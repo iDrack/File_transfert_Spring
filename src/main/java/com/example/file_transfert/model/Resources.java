@@ -26,7 +26,7 @@ public abstract class Resources {
     private String type;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id", insertable = false, updatable = false)
+    @JoinColumn(name = "owner_id")
     private User owner;
 
     @Column(name = "created_at", nullable = false)

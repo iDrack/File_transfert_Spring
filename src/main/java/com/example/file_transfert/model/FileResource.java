@@ -65,6 +65,6 @@ public class FileResource extends Resources {
             }
         }
 
-        return new FileResourceMetadata(this.storageName, this.mimeType, this.getOwner().getUsername(), this.size, permissions, this.getVisibility());
+        return new FileResourceMetadata(this.storageName, this.getName(), this.mimeType, this.getOwner().getUsername(), this.size, permissions, this.getVisibility());
     }
 }

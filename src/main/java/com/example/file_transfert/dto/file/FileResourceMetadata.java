@@ -13,6 +13,7 @@ import java.util.Set;
 @AllArgsConstructor
 public class FileResourceMetadata {
     String filename;
+    String originalName;
     String mimeType;
     String ownerName;
     long size;

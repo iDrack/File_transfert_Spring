@@ -6,7 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.io.File;
 import java.util.Optional;
 import java.util.Set;
 
@@ -17,7 +16,7 @@ public interface FileResourceRepository extends JpaRepository<FileResource, Long
 
     Optional<FileResource> getFileResourcesByStorageName(String storageName);
 
-    Set<FileResource> getFileResourcesByOwner(User owner);
+    Set<FileResource> getFileResourcesByOwner_Id(Long ownerId);
 
     @Query(value = "SELECT f " +
             "FROM FileResource f " +
