@@ -12,7 +12,6 @@ import java.util.Set;
 
 @Repository
 public interface FileResourceRepository extends JpaRepository<FileResource, Long> {
-    Set<FileResource> getFileResources();
 
     Optional<FileResource> getFileResourcesById(Long id);
 

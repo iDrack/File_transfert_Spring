@@ -95,17 +95,19 @@ public class FileStorageService implements IFileStorageService {
     }
 
     List<FileResourceMetadata> getSubList(ArrayList<FileResourceMetadata> files, int page) {
+        if (files.isEmpty()) return files;
         int offset = (page - 1) * this.limit;
         int offsetEnd = page * this.limit;
+        if (offsetEnd > files.size()) offsetEnd = files.size();
         return files.subList(offset, offsetEnd);
     }
 
     @Override
     public FileResourceMetadataSet generateMetadata(List<FileResourceMetadata> files, int page) {
-        int totalPages = (int) Math.ceil((double) files.size() /this.limit);
-        int prev = (page - 1 <= 0) ? null : page - 1;
-        int next = (page + 1 > totalPages) ? null : page + 1;
-        return new FileResourceMetadataSet(page, prev, next, files.size(), this.limit, totalPages, files);
+        int totalPages = (int) Math.ceil((double) files.size() / this.limit) + 1;
+        int prev = Math.max(page - 1, 1);
+        int next = Math.min(page + 1, totalPages);
+        return new FileResourceMetadataSet(page, prev, next, files.size(), totalPages, this.limit, files);
     }
 
     @Override
@@ -118,7 +120,7 @@ public class FileStorageService implements IFileStorageService {
 
     @Override
     public List<FileResourceMetadata> getPublicFileMeta(int page) {
-        return getSubList(fileRepo.getFileResources().stream()
+        return getSubList(fileRepo.findAll().stream()
                 .filter(f -> f.getVisibility().equals(Resources.Visibility.PUBLIC))
                 .map(f -> f.toMetaData(null))
                 .collect(Collectors.toCollection(ArrayList::new)), page);

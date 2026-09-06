@@ -45,12 +45,9 @@ public class FileTransferController {
             @AuthenticationPrincipal User currentUser)
             throws IOException {
 
-        // basic validation
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Empty file"));
         }
-        // optional: check content type whitelist
-        // if (!allowedTypes.contains(file.getContentType())) { ... }
 
         if (visibility == null) {
             visibility = Resources.Visibility.PRIVATE;
@@ -89,7 +86,7 @@ public class FileTransferController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<FileResourceMetadataSet> getUserFilenames(
             @AuthenticationPrincipal User currentUser,
-            @RequestParam int page
+            @RequestParam(defaultValue = "1") int page
     ) {
         if (page <= 0) page = 1;
         List<FileResourceMetadata> files = fileStorageService.getFilesMetaByOwner(currentUser, page);
