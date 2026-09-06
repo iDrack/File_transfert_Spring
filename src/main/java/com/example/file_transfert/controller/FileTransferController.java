@@ -231,19 +231,23 @@ public class FileTransferController {
     @PutMapping("/transfert-ownership/{filename:.+}")
     @PreAuthorize("isAuthenticated")
     @IsOwner()
-    public ResponseEntity<String> transfertOwnership(@PathVariable String filename, @RequestBody String newOwnerUsername) {
-        if (newOwnerUsername.isBlank()) {
+    public ResponseEntity<String> transfertOwnership(
+            @PathVariable String filename,
+            @RequestBody FileNewOwner newOwner
+    ) {
+        if (newOwner.getUsername().isBlank()) {
             return ResponseEntity.status(400).body("New owner username is empty.");
         }
-        if (userService.getByUsername(newOwnerUsername) == null) {
-            return ResponseEntity.status(404).body("Uer: " + newOwnerUsername + " not found");
+        System.out.println(newOwner.getUsername());
+        if (userService.getByUsername(newOwner.getUsername()) == null) {
+            return ResponseEntity.status(404).body("User: " + newOwner.getUsername() + " not found");
         }
         FileResource file = fileStorageService.getFileResourceByStorageName(filename);
         if (file == null) {
             return ResponseEntity.status(404).body("File: " + filename + " not found");
         }
-        Resources res = resourcesService.changeOwnership(file, newOwnerUsername);
-        return ResponseEntity.ok(newOwnerUsername + " is now the owner of " + filename);
+        Resources res = resourcesService.changeOwnership(file, newOwner.getUsername());
+        return ResponseEntity.ok(newOwner.getUsername() + " is now the owner of " + filename);
     }
 
 }
