@@ -8,6 +8,7 @@ import com.example.file_transfert.service.interfaces.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -19,6 +20,7 @@ public class AccessControlService implements IAccessControlService {
     @Autowired
     private IUserService userService;
 
+    @Autowired
     private IFileStorageService storage;
 
     @Override
@@ -39,10 +41,13 @@ public class AccessControlService implements IAccessControlService {
     }
 
     @Override
-    public boolean isFileSharedWith(String username, String filename, Permission permission) throws InsufficientPermissionException, AccessDeniedException {
+    public boolean isFileSharedWith(String username, String filename, Permission permission) throws AccessDeniedException {
         FileResource fileResource = storage.getFileResourceByStorageName(filename);
-        //If public, accept access
-        if (fileResource.getVisibility().equals(Resources.Visibility.PUBLIC)) return true;
+        //ADMIN bypass permission check
+        if (userService.getByUsername(username).getAuthorities().stream().anyMatch(a -> a.equals(new SimpleGrantedAuthority("PERMISSION_ADMIN_ACCESS"))))
+            return true;
+        //If public and READ Permission, accept access
+        if (fileResource.getVisibility().equals(Resources.Visibility.PUBLIC) && permission.equals(Permission.RESOURCE_READ)) return true;
         //If user is owner, accept access
         if (fileResource.getOwner().getUsername().equals(username)) return true;
         //Search if the user is in the list of people in which the file is shared with
@@ -66,10 +71,7 @@ public class AccessControlService implements IAccessControlService {
             throw new InsufficientPermissionException(Permission.RESOURCE_READ);
         }
 
-        if (res.getPermissions().stream().noneMatch(p -> p.equals(permission))) {
-            return true;
-        }
-        return false;
+        return res.getPermissions().stream().anyMatch(p -> p.equals(permission));
     }
 
     @Override

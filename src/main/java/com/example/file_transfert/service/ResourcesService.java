@@ -1,5 +1,6 @@
 package com.example.file_transfert.service;
 
+import com.example.file_transfert.dto.resources.WhoHasAccess;
 import com.example.file_transfert.model.Permission;
 import com.example.file_transfert.model.ResourceSharedWithPermission;
 import com.example.file_transfert.model.Resources;
@@ -24,6 +25,7 @@ public class ResourcesService implements IResourcesService {
 
     /**
      * Find aresource with its ID
+     *
      * @param id id to look up
      * @return resource corresponding to the id
      */
@@ -35,7 +37,8 @@ public class ResourcesService implements IResourcesService {
 
     /**
      * Change the visibility of a resource
-     * @param resource resource to update
+     *
+     * @param resource      resource to update
      * @param newVisibility new visibility
      * @return updated resource
      */
@@ -48,8 +51,9 @@ public class ResourcesService implements IResourcesService {
 
     /**
      * Share a resource with new users
-     * @param resource resource to share
-     * @param newUsers new suers to add to the sharing list
+     *
+     * @param resource    resource to share
+     * @param newUsers    new suers to add to the sharing list
      * @param permissions permissions for the newly added users
      * @return updated resource
      */
@@ -76,6 +80,7 @@ public class ResourcesService implements IResourcesService {
 
     /**
      * Share a resource with new users using a list of permissions, if a user is already present, replace its permissions
+     *
      * @param resource resource to update
      * @param newUsers map of new users with their permissions
      * @return resource updated
@@ -114,8 +119,9 @@ public class ResourcesService implements IResourcesService {
 
     /**
      * Replace a user set of permissions with new one on a resource the user has access
-     * @param resource resource to update
-     * @param username username of the user to update
+     *
+     * @param resource       resource to update
+     * @param username       username of the user to update
      * @param newPermissions new permission for the user
      * @return updated resource
      */
@@ -131,8 +137,9 @@ public class ResourcesService implements IResourcesService {
 
     /**
      * Add new permissions to a user having access to a resource
-     * @param resource resource to update
-     * @param username username of the user to update
+     *
+     * @param resource       resource to update
+     * @param username       username of the user to update
      * @param newPermissions permissions to add to the user on the specified resource
      * @return updated resource
      */
@@ -147,8 +154,9 @@ public class ResourcesService implements IResourcesService {
 
     /**
      * Revoke a permission from a user having access to a resource
-     * @param resource resource to update
-     * @param username username of the user to update its permissions
+     *
+     * @param resource   resource to update
+     * @param username   username of the user to update its permissions
      * @param permission permission to revoke from the user
      * @return updated resource
      */
@@ -165,7 +173,8 @@ public class ResourcesService implements IResourcesService {
 
     /**
      * Remove user access to a resource.
-     * @param resource resource to update
+     *
+     * @param resource      resource to update
      * @param usersToDelete user to revoke
      * @return updated resource
      */
@@ -178,7 +187,26 @@ public class ResourcesService implements IResourcesService {
     }
 
     /**
+     * Find who can access a file with their permissions
+     *
+     * @param resource Resource to check.
+     * @return Filename, visibility and list of users with their permissions
+     */
+    @Override
+    public WhoHasAccess whohasAccessToResource(Resources resource) {
+        Set<ResourceSharedWithPermission> usersTmp = resource.getSharedWithUsers();
+        WhoHasAccess ret = new WhoHasAccess();
+        ret.setResourceName(resource.getName());
+        ret.setVisibility(resource.getVisibility());
+        Map<String, Set<Permission>> users = usersTmp.stream()
+                .collect(Collectors.toMap(u -> u.getUser().getUsername(), ResourceSharedWithPermission::getPermissions));
+        ret.setUsers(users);
+        return ret;
+    }
+
+    /**
      * Change ownership of a file to the user with specified username
+     *
      * @param resource resource to transfert
      * @param username new owner's username
      * @return updated resource

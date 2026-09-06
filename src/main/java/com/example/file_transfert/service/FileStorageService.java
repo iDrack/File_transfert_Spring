@@ -104,7 +104,7 @@ public class FileStorageService implements IFileStorageService {
 
     @Override
     public FileResourceMetadataSet generateMetadata(List<FileResourceMetadata> files, int page) {
-        int totalPages = (int) Math.ceil((double) files.size() / this.limit);
+        int totalPages = (int) Math.max(Math.ceil((double) files.size() / this.limit), 1);
         int prev = Math.max(page - 1, 1);
         int next = Math.min(page + 1, totalPages);
         return new FileResourceMetadataSet(page, prev, next, files.size(), totalPages, this.limit, files);
@@ -120,10 +120,10 @@ public class FileStorageService implements IFileStorageService {
     }
 
     @Override
-    public List<FileResourceMetadata> getPublicFileMeta(int page) {
+    public List<FileResourceMetadata> getPublicFileMeta(User activeUser, int page) {
         return getSubList(fileRepo.findAll().stream()
                 .filter(f -> f.getVisibility().equals(Resources.Visibility.PUBLIC))
-                .map(f -> f.toMetaData(null))
+                .map(f -> f.toMetaData(activeUser.getId()))
                 .collect(Collectors.toCollection(ArrayList::new)), page);
     }
 

@@ -1,6 +1,7 @@
 package com.example.file_transfert.controller;
 
 import com.example.file_transfert.dto.file.*;
+import com.example.file_transfert.dto.resources.WhoHasAccess;
 import com.example.file_transfert.model.FileResource;
 import com.example.file_transfert.model.Permission;
 import com.example.file_transfert.model.Resources;
@@ -89,21 +90,22 @@ public class FileTransferController {
             @RequestParam(defaultValue = "1") int page
     ) {
         if (page <= 0) page = 1;
-        System.out.println(currentUser.getUsername());
-        System.out.println(currentUser.getId());
         List<FileResourceMetadata> files = fileStorageService.getFilesMetaByOwner(currentUser, page);
         return ResponseEntity.ok(fileStorageService.generateMetadata(files, page));
     }
 
     @GetMapping("/public")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<FileResourceMetadataSet> getPublicFilename(@RequestParam(defaultValue = "1") int page) {
+    public ResponseEntity<FileResourceMetadataSet> getPublicFilename(
+            @AuthenticationPrincipal User currentUser,
+            @RequestParam(defaultValue = "1") int page
+    ) {
         if (page <= 0) page = 1;
-        List<FileResourceMetadata> files = fileStorageService.getPublicFileMeta(page);
+        List<FileResourceMetadata> files = fileStorageService.getPublicFileMeta(currentUser, page);
         return ResponseEntity.ok(fileStorageService.generateMetadata(files, page));
     }
 
-    @GetMapping("/shared")
+    @GetMapping("/shared-with-me")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<FileResourceMetadataSet> getFilenamesSharedWithMe(
             @AuthenticationPrincipal User currentUser,
@@ -111,6 +113,19 @@ public class FileTransferController {
         if (page <= 0) page = 1;
         List<FileResourceMetadata> files = fileStorageService.getSharedFileMeta(currentUser.getUsername(), page);
         return ResponseEntity.ok(fileStorageService.generateMetadata(files, page));
+    }
+
+    @GetMapping("/whos-has-access/{filename:.+}")
+    @PreAuthorize("isAuthenticated()")
+    @IsSharedWithActiveUser(permission = Permission.RESOURCE_READ)
+    public ResponseEntity<WhoHasAccess> whoHasAccessToFile(@PathVariable String filename ) {
+        FileResource file = fileStorageService.getFileResourceByStorageName(filename);
+        if (file == null) {
+            ResponseEntity.status(404).body(Map.of("error", "File: " + filename + " not found"));
+        }
+        WhoHasAccess whoHasAccess = resourcesService.whohasAccessToResource(file);
+        whoHasAccess.setResourceName(filename);
+        return ResponseEntity.ok(whoHasAccess);
     }
 
     @PutMapping("/share-with-user/{filename:.+}")
@@ -203,15 +218,14 @@ public class FileTransferController {
     @IsSharedWithActiveUser(permission = Permission.RESOURCE_MANAGE_VISIBILITY)
     public ResponseEntity<String> updateFileVisibility(
             @PathVariable String filename,
-            @RequestBody Resources.Visibility visibility
+            @RequestBody FileUpdateVisibility visibilityRequest
     ) {
         FileResource file = fileStorageService.getFileResourceByStorageName(filename);
         if (file == null) {
             return ResponseEntity.status(404).body("File: " + filename + " not found");
         }
-        resourcesService.updateVisibility(file, visibility);
-        return ResponseEntity.ok(filename + " is now " + visibility);
-
+        resourcesService.updateVisibility(file, visibilityRequest.getVisibility());
+        return ResponseEntity.ok(filename + " is now " + visibilityRequest.getVisibility());
     }
 
     @PutMapping("/transfert-ownership/{filename:.+}")

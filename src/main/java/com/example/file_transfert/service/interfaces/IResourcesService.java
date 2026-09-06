@@ -1,5 +1,6 @@
 package com.example.file_transfert.service.interfaces;
 
+import com.example.file_transfert.dto.resources.WhoHasAccess;
 import com.example.file_transfert.model.Permission;
 import com.example.file_transfert.model.Resources;
 
@@ -23,6 +24,8 @@ public interface IResourcesService {
     Resources revokeUserPermission(Resources resource, String username, Permission permission);
 
     Resources revokeSharingFromUsers(Resources resource, Set<String> usersToDelete);
+
+    WhoHasAccess whohasAccessToResource(Resources resource);
 
     Resources changeOwnership(Resources resources, String username);
 }

@@ -2,7 +2,6 @@ package com.example.file_transfert.security.aspect;
 
 import com.example.file_transfert.exception.InsufficientPermissionException;
 import com.example.file_transfert.model.Permission;
-import com.example.file_transfert.model.User;
 import com.example.file_transfert.security.annotation.IsOwner;
 import com.example.file_transfert.security.annotation.RequirePermission;
 import com.example.file_transfert.security.annotation.IsSharedWithActiveUser;
@@ -17,8 +16,6 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-
-import org.aspectj.lang.reflect.MethodSignature;
 
 import java.util.Arrays;
 
@@ -71,7 +68,7 @@ public class PermissionAspect {
 
     private PermissionContext resolvePermissionContext(JoinPoint joinPoint) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username =authentication.getName();
+        String username = authentication.getName();
 
         Object[] args = joinPoint.getArgs();
         String filename = Arrays.stream(args)

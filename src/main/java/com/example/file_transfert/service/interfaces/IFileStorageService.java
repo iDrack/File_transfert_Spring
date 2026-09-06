@@ -26,7 +26,7 @@ public interface IFileStorageService {
 
     List<FileResourceMetadata> getFilesMetaByOwner(User owner, int page);
 
-    List<FileResourceMetadata> getPublicFileMeta(int page);
+    List<FileResourceMetadata> getPublicFileMeta(User activeUser, int page);
 
     List<FileResourceMetadata> getSharedFileMeta(String username, int page);
 

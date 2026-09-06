@@ -65,6 +65,8 @@ public class FileResource extends Resources {
             }
         }
 
+        if (this.getVisibility().equals(Visibility.PUBLIC) && !permissions.contains(Permission.RESOURCE_READ))
+            permissions.add(Permission.RESOURCE_READ);
         return new FileResourceMetadata(this.storageName, this.getName(), this.mimeType, this.getOwner().getUsername(), this.size, permissions, this.getVisibility());
     }
 }
