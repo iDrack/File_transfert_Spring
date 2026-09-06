@@ -105,7 +105,7 @@ public class FileTransferController {
 
     @GetMapping("/shared")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<FileResourceMetadataSet> getSharedFilename(
+    public ResponseEntity<FileResourceMetadataSet> getFilenamesSharedWithMe(
             @AuthenticationPrincipal User currentUser,
             @RequestParam(defaultValue = "1") int page) {
         if (page <= 0) page = 1;

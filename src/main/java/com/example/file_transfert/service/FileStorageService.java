@@ -104,7 +104,7 @@ public class FileStorageService implements IFileStorageService {
 
     @Override
     public FileResourceMetadataSet generateMetadata(List<FileResourceMetadata> files, int page) {
-        int totalPages = (int) Math.ceil((double) files.size() / this.limit) + 1;
+        int totalPages = (int) Math.ceil((double) files.size() / this.limit);
         int prev = Math.max(page - 1, 1);
         int next = Math.min(page + 1, totalPages);
         return new FileResourceMetadataSet(page, prev, next, files.size(), totalPages, this.limit, files);

@@ -56,7 +56,7 @@ public class FileResource extends Resources {
                 permissions.addAll(List.of(
                         Permission.RESOURCE_READ,
                         Permission.RESOURCE_UPDATE,
-                        Permission.USER_DELETE,
+                        Permission.RESOURCE_DELETE,
                         Permission.RESOURCE_MANAGE_USERS,
                         Permission.RESOURCE_MANAGE_VISIBILITY));
             } else {
