@@ -35,7 +35,7 @@ public abstract class Resources {
     @Enumerated(EnumType.STRING)
     private Visibility visibility;
 
-    @OneToMany(mappedBy = "resource")
+    @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ResourceSharedWithPermission> sharedWithUsers = new HashSet<>();
 
     protected Resources(Long id, String name, String type, User owner,

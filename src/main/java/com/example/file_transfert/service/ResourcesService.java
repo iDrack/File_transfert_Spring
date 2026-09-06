@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -102,13 +103,13 @@ public class ResourcesService implements IResourcesService {
                 existing.replacePermissions(permissions);
             } else {
                 if (userService.getByUsername(username) != null) {
-                    resource.getSharedWithUsers().add(
-                            ResourceSharedWithPermission.builder()
-                                    .user(userService.getByUsername(username))
-                                    .resource(resource)
-                                    .permissions(permissions)
-                                    .build()
-                    );
+                    ResourceSharedWithPermission resourceShare = new ResourceSharedWithPermission();
+
+                    resourceShare.setUser(userService.getByUsername(username));
+                    resourceShare.setResource(resource);
+                    resourceShare.setPermissions(new HashSet<>(permissions));
+                    resource.getSharedWithUsers().add(resourceShare);
+                    resourcesRepository.save(resource);
                 }
             }
         });

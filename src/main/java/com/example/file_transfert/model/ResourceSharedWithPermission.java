@@ -22,15 +22,16 @@ public class ResourceSharedWithPermission {
     private Long Id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    @JoinColumn(name = "user_id")
     @JsonIgnore
+    @EqualsAndHashCode.Include
     private User user;
 
     @Column(name = "permissions")
     private Set<Permission> permissions = new HashSet<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "resource_id", insertable = false, updatable = false)
+    @JoinColumn(name = "resource_id")
     @JsonIgnore
     private Resources resource;
 
